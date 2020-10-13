@@ -140,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /* Called when the activity is first created. */
-    //@SuppressLint("RestrictedApi")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
