@@ -3,53 +3,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/company"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
+    android:layout_height="80dp"
     android:orientation="vertical"
     android:paddingTop="5dp"
     android:paddingBottom="5dp">
 
     <TextView
-        android:id="@+id/name"
+        android:id="@+id/emp_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/age"
+        android:id="@+id/emp_pn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/competences"
+        android:id="@+id/emp_skills"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/employees"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Employees:" />
-
-    <LinearLayout
-        android:id="@+id/emp_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/emp_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/emp_pn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/emp_skills"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
 
     <!-- <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"

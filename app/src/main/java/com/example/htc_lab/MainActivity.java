@@ -1,9 +1,11 @@
 package com.example.htc_lab;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import android.os.Bundle;
-import android.util.Log;
+import android.os.StrictMode;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,27 +20,63 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
+
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
-
-import static android.util.Log.e;
 
 public class MainActivity extends AppCompatActivity {
 
+    public String DownloadJSON (String http) {
+        InputStream in;
+        BufferedReader br;
+        try {
+            //Connect to http
+            URL url = new URL(http);
+            HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+            httpConn.setAllowUserInteraction(false);
+            httpConn.setInstanceFollowRedirects(true);
+            httpConn.setRequestMethod("GET");
+            httpConn.setRequestProperty("Content-Type", "application/json");
+            httpConn.setConnectTimeout(3000);
+            httpConn.setReadTimeout(3000);
+            httpConn.setDoInput(true);
+            httpConn.connect();
 
+            //Open InputStream and read JSON from http
+            //Build it to String
+            int resCode = httpConn.getResponseCode();
+            if (resCode == HttpURLConnection.HTTP_OK) {
+                in = httpConn.getInputStream();
+                br = new BufferedReader(new InputStreamReader(in));
+
+                StringBuilder sb= new StringBuilder();
+                String s;
+                while((s= br.readLine())!= null) {
+                    sb.append(s);
+                    sb.append("\n");
+                }
+                return sb.toString();
+            } else {
+                throw new IOException("No response received.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "notwork";
+        }
+    }
     public static class CompaniesAdapter extends
             RecyclerView.Adapter<CompaniesAdapter.ViewHolder> {
 
-        private List<Company> mComs;
+        private List<Companies> companiesList;
 
-        public CompaniesAdapter(List<Company> mComs) {
-            this.mComs = mComs;
+        public CompaniesAdapter(List<Companies> companies) {
+            this.companiesList = companies;
         }
 
 
@@ -59,12 +97,12 @@ public class MainActivity extends AppCompatActivity {
                 // to access the context from any ViewHolder instance.
                 super(itemView);
 
-                name = (TextView) itemView.findViewById(R.id.name);
-                age = (TextView) itemView.findViewById(R.id.age);
-                competences = (TextView) itemView.findViewById(R.id.competences);
-                emp_name = (TextView) itemView.findViewById(R.id.emp_name);
-                emp_pn = (TextView) itemView.findViewById(R.id.emp_pn);
-                emp_skills = (TextView) itemView.findViewById(R.id.emp_skills);
+                name = itemView.findViewById(R.id.name);
+                age = itemView.findViewById(R.id.age);
+                competences = itemView.findViewById(R.id.competences);
+                emp_name = itemView.findViewById(R.id.emp_name);
+                emp_pn = itemView.findViewById(R.id.emp_pn);
+                emp_skills = itemView.findViewById(R.id.emp_skills);
             }
         }
 
@@ -75,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
             Context context = parent.getContext();
             LayoutInflater inflater = LayoutInflater.from(context);
 
+
             // Inflate the custom layout
             View companyView = inflater.inflate(R.layout.company_item, parent, false);
 
@@ -83,60 +122,51 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Involves populating data into the item through holder
+        @SuppressLint("SetTextI18n")
         @Override
         public void onBindViewHolder(CompaniesAdapter.ViewHolder holder, int position) {
             // Get the data model based on position
-            Company Comp = mComs.get(position);
+            Employee Comp = companiesList.get(0).getCompany().getEmployees().get(position);
             // Set item views based on your views and data model
-            TextView textViewName = holder.name;
-            textViewName.setText(Comp.getName());
-            TextView textViewAge = holder.age;
-            textViewAge.setText(Comp.getName());
 
-            TextView textViewCompetences = holder.competences;
-            textViewCompetences.setText((CharSequence) Comp.getCompetences());
-
-            /*TextView textViewE_Name = holder.emp_name;
-            textViewE_Name.setText(Emp.getName());
+            TextView textViewE_Name = holder.emp_name;
             TextView textViewE_pn = holder.emp_pn;
-            textViewE_pn.setText(Emp.getPhoneNumber());
-
             TextView textViewE_Competences = holder.emp_skills;
-            textViewE_Competences.setText((CharSequence) Emp.getSkills());*/
+
+            //Check fields and fill
+            StringBuilder s = new StringBuilder();
+                if (Comp.getName() != null)
+                    textViewE_Name.setText(Comp.getName());
+                else
+                    textViewE_Name.setText("-");
+
+                if (Comp.getPhoneNumber() != null)
+                    textViewE_pn.setText(Comp.getPhoneNumber());
+                else
+                    textViewE_pn.setText("-");
+
+                if (Comp.getSkills() != null) {
+                    for (int i = 0; i < Comp.getSkills().size(); i++) {
+                        s.append(Comp.getSkills().get(i));
+                        s.append(" ");
+                    }
+                    textViewE_Competences.setText(s);
+                }
+                else
+                    textViewE_Competences.setText("-");
+
         }
 
         // Returns the total count of items in the list
         @Override
         public int getItemCount() {
-
             int a;
-
-            if(mComs != null && !mComs.isEmpty()) {
-                a = mComs.size();
-            }
-            else {
-
-                a = 0;
-
-            }
-                return a;
+            if(companiesList.get(0).getCompany().getEmployees() != null &&
+              !companiesList.get(0).getCompany().getEmployees().isEmpty())
+            { a = companiesList.get(0).getCompany().getEmployees().size(); }
+            else { a = 0; }
+            return a;
         }
-    }
-
-    public static class IOUtils {
-
-        public static void closeQuietly(InputStream in)  {
-            try {
-                in.close();
-            }catch (Exception e) { e.printStackTrace(); }
-        }
-
-        public static void closeQuietly(Reader reader)  {
-            try {
-                reader.close();
-            }catch (Exception e) { e.printStackTrace(); }
-        }
-
     }
 
     /* Called when the activity is first created. */
@@ -144,57 +174,42 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //To work on the main thread
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
-        String JSON = "";
-        InputStream in = null;
-        BufferedReader br= null;
-        try {
-            URL url = new URL("https://www.mocky.io/v2/5ddcd3673400005800eae483");
-            HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+        //Download json
+        String url = "http://www.mocky.io/v2/5ddcd3673400005800eae483";
+        String JSON = DownloadJSON(url);
 
-            httpConn.setAllowUserInteraction(false);
-            httpConn.setInstanceFollowRedirects(true);
-            httpConn.setRequestMethod("GET");
-            httpConn.connect();
-            int resCode = httpConn.getResponseCode();
+        //Create gson
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        Companies JCompany = gson.fromJson(JSON, Companies.class);
+        ArrayList<Companies> arrayOfCompanies = new ArrayList<>();
+        arrayOfCompanies.add(JCompany);
+        System.out.println(JCompany.getCompany().getEmployees().get(0).getName());
 
-            if (resCode == HttpURLConnection.HTTP_OK) {
-                in = httpConn.getInputStream();
-                br= new BufferedReader(new InputStreamReader(in));
+        CompaniesAdapter adapter = new CompaniesAdapter(arrayOfCompanies);
+        RecyclerView recyclerView = findViewById(R.id.rvCompanies);
 
-                StringBuilder sb= new StringBuilder();
-                String s;
-                while((s= br.readLine())!= null) {
-                    sb.append(s);
-                    sb.append("\n");
-                }
-                JSON = sb.toString();
-            } else {
-                JSON = "notwork";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            IOUtils.closeQuietly(in);
-            IOUtils.closeQuietly(br);
+        //Fill company properties to layout
+        TextView setName = findViewById(R.id.name);
+        setName.setText(JCompany.getCompany().getName());
+        TextView setAge = findViewById(R.id.age);
+        setAge.setText(JCompany.getCompany().getAge());
+
+        StringBuilder setCompArr = new StringBuilder();
+        for (int i = 0; i < JCompany.getCompany().getCompetences().size(); i++) {
+            setCompArr.append(JCompany.getCompany().getCompetences().get(i)).append(" ");
         }
+        TextView setCompetences = findViewById(R.id.competences);
+        setCompetences.setText(setCompArr.toString());
 
-
-
-            e("TAG", JSON);
-            //Create gson
-            GsonBuilder builder = new GsonBuilder();
-            Gson gson = builder.create();
-            Company JCompany = gson.fromJson(JSON, Company.class);
-
-            ArrayList<Company> arrayOfCompanies = new ArrayList<>();
-            arrayOfCompanies.add(JCompany);
-            CompaniesAdapter adapter = new CompaniesAdapter(arrayOfCompanies);
-            RecyclerView recyclerView = (RecyclerView) findViewById(R.id.rvCompanies);
-
-            recyclerView.setHasFixedSize(true);
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            recyclerView.setAdapter(adapter);
+        //Helps to display items in the correct order
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
 
     }
 }
